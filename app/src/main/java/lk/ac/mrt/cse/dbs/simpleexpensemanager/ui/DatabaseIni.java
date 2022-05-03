@@ -165,7 +165,7 @@ public class DatabaseIni extends SQLiteOpenHelper {
 
         SQLiteDatabase db=this.getReadableDatabase();
         String BalanceFetch_query = "SELECT "+ Balance + " FROM "+Account_table+" where "+Account_number+"= \''" + accountNo;
-        String UpdateBalance = "UPDATE "+Account_table+" SET "+Balance+" "+Double.toString(RemBalance)+" WHERE "+ Account_number+"= \''" + accountNo;
+
         Cursor cur = db.rawQuery(BalanceFetch_query,null);
 
         if(cur.moveToFirst()){
@@ -181,6 +181,7 @@ public class DatabaseIni extends SQLiteOpenHelper {
             RemBalance+=amount;
         }
 
+        String UpdateBalance = "UPDATE "+Account_table+" SET "+Balance+" "+Double.toString(RemBalance)+" WHERE "+ Account_number+"= \''" + accountNo;
         db.execSQL(UpdateBalance);
 
         cur.close();

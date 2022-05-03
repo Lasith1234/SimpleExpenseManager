@@ -44,6 +44,6 @@ public class PersistantAccountDAO implements AccountDAO {
 
     @Override
     public void updateBalance(String accountNo, ExpenseType expenseType, double amount) throws InvalidAccountException {
-
+        database.record_update(accountNo,expenseType,amount);
     }
 }
