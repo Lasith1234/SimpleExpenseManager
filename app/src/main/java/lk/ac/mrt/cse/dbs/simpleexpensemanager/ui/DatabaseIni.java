@@ -191,8 +191,10 @@ public class DatabaseIni extends SQLiteOpenHelper {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues Con_vals = new ContentValues();
 
-        DateFormat dateFormat = new SimpleDateFormat("dd-mm-yyyy");
-        String strDate = dateFormat.format(date);
+        //DateFormat dateFormat = new SimpleDateFormat("dd-mm-yyyy");
+        //String strDate = dateFormat.format(date);
+
+        String strDate = new SimpleDateFormat("dd-MM-yyyy").format(date);
 
         String ExpType;
         if(expenseType.equals(ExpenseType.EXPENSE)){
@@ -218,9 +220,9 @@ public class DatabaseIni extends SQLiteOpenHelper {
 
     public List<Transaction> getALLTransactions() throws ParseException {
 
-        ArrayList<Transaction> returnList= new ArrayList<>();
+        List<Transaction> returnList= new ArrayList<>();
         SQLiteDatabase db=this.getReadableDatabase();
-        ExpenseType temp;
+
 
         String Transactions_query = "SELECT * FROM "+Transaction_table;
         Cursor cur = db.rawQuery(Transactions_query,null);
@@ -228,10 +230,13 @@ public class DatabaseIni extends SQLiteOpenHelper {
         if(cur.moveToFirst()){
             do {
 
-                Date date1= new SimpleDateFormat("dd/MM/yyyy").parse(cur.getString(0));
+                Date date1= new SimpleDateFormat("dd-MM-yyyy").parse(cur.getString(0));
+                //Date date1= new Date(cur.getString(0));
                 String AccountNum= cur.getString(1);
                 String strExpenseType=cur.getString(2);
                 Double Amnt = cur.getDouble(3);
+
+                ExpenseType temp;
 
                 if(strExpenseType.equals("Expense")){
                     temp= ExpenseType.EXPENSE;
@@ -251,9 +256,9 @@ public class DatabaseIni extends SQLiteOpenHelper {
     }
 
     public List<Transaction> getlimitedTransaction(int limit) throws ParseException {
-        ArrayList<Transaction> returnList= new ArrayList<>();
+        List<Transaction> returnList= new ArrayList<>();
         SQLiteDatabase db=this.getReadableDatabase();
-        ExpenseType temp;
+
         int count=1;
 
         String Transactions_query = "SELECT * FROM "+Transaction_table;
@@ -262,10 +267,12 @@ public class DatabaseIni extends SQLiteOpenHelper {
         if(cur.moveToFirst()){
             do {
                 count+=1;
-                Date date1= new SimpleDateFormat("dd/MM/yyyy").parse(cur.getString(0));
+                Date date1= new SimpleDateFormat("dd-MM-yyyy").parse(cur.getString(0));
                 String AccountNum= cur.getString(1);
                 String strExpenseType=cur.getString(2);
                 Double Amnt = cur.getDouble(3);
+
+                ExpenseType temp;
 
                 if(strExpenseType.equals("Expense")){
                     temp= ExpenseType.EXPENSE;
