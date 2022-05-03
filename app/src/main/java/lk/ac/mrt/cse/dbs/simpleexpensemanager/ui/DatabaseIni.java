@@ -1,0 +1,286 @@
+package lk.ac.mrt.cse.dbs.simpleexpensemanager.ui;
+
+import android.content.ContentValues;
+import android.content.Context;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteOpenHelper;
+import android.support.annotation.Nullable;
+
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+
+import lk.ac.mrt.cse.dbs.simpleexpensemanager.data.model.Account;
+import lk.ac.mrt.cse.dbs.simpleexpensemanager.data.model.ExpenseType;
+import lk.ac.mrt.cse.dbs.simpleexpensemanager.data.model.Transaction;
+
+public class DatabaseIni extends SQLiteOpenHelper {
+
+    public static final String Account_table ="ACCOUNT_DET";
+    public static final String ExpenseType_table="ExpenseType_DET";
+    public static final String Transaction_table="TRANSACTION_DET";
+    public static final String Account_number="accountNo";
+    public static final String Bank_name="bankName";
+    public static final String Holder_name="accountHolderName";
+    public static final String Type_ID="Type_ID";
+    public static final String Type_name="Type";
+    public static final String Date="Date";
+    public static final String TAccount_num="Account_number";
+    public static final String Expense_type="Expense_type";
+    public static final String Amount="Amount";
+    public static final String Balance="Balance";
+
+    public DatabaseIni(@Nullable Context context) {
+
+        super(context, "190483N", null, 1);
+    }
+
+    @Override
+    public void onCreate(SQLiteDatabase sqLiteDatabase) {
+        String TableAccount = "CREATE TABLE "+Account_table+"("+Account_number+" TEXT PRIMARY KEY,"+Bank_name+" TEXT,"+Holder_name+" TEXT,"+Balance+" REAL)";
+        //String TableExpenseType = "CREATE TABLE "+ExpenseType_table+"("+Type_ID+" INTEGER PRIMARY KEY,"+Type_name+" TEXT)";
+        String TableTransaction ="CREATE TABLE "+Transaction_table+"("+Date+" TEXT,"+TAccount_num+" TEXT,"+Expense_type+" TEXT,"+Amount+" REAL)";
+
+        sqLiteDatabase.execSQL(TableAccount);
+        //sqLiteDatabase.execSQL(TableExpenseType);
+        sqLiteDatabase.execSQL(TableTransaction);
+    }
+
+    @Override
+    public void onUpgrade(SQLiteDatabase sqLiteDatabase, int i, int i1) {
+
+    }
+
+    public boolean add_Account_Record(Account ac){
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues Con_vals = new ContentValues();
+
+        Con_vals.put(Account_number, ac.getAccountNo());
+        Con_vals.put(Bank_name,ac.getBankName());
+        Con_vals.put(Holder_name,ac.getAccountHolderName());
+        Con_vals.put(Balance,ac.getBalance());
+
+        long insert = db.insert(Account_table, null, Con_vals);
+
+
+        if(insert==-1){
+            return false;
+        }else{
+            return true;
+        }
+
+    }
+
+    public List<String> get_account_numbers(){
+        ArrayList<String> returnList = new ArrayList<>();
+
+        String Accounts_list_query = "SELECT "+Account_number+" FROM "+Account_table;
+        SQLiteDatabase db=this.getReadableDatabase();
+
+        Cursor cur = db.rawQuery(Accounts_list_query,null);
+//        Cursor cur =db.query(Account_table,new String[] {Account_number},null,
+//                null,null,null,null,null);
+
+        if(cur.moveToFirst()) {
+            do {
+                //String accountNO = cur.getString(0);
+                returnList.add(cur.getString(0));
+            } while (cur.moveToNext());
+        }
+
+        cur.close();
+        db.close();
+        return returnList;
+    }
+
+    public List<Account> get_accounts(){
+        ArrayList<Account> returnList= new ArrayList<>();
+        SQLiteDatabase db=this.getReadableDatabase();
+
+        String Accounts_query = "SELECT * FROM "+Account_table;
+        //SQLiteDatabase db1=this.getReadableDatabase();
+        Cursor cur = db.rawQuery(Accounts_query,null);
+
+        if(cur.moveToFirst()){
+            do {
+                String AccountNum = cur.getString(0);
+                String BankName = cur.getString(1);
+                String HolderName = cur.getString(2);
+                double Bal = cur.getDouble(3);
+
+                Account retAccount = new Account(AccountNum,BankName,HolderName,Bal);
+                returnList.add(retAccount);
+            }while(cur.moveToNext());
+        }
+
+        cur.close();
+        db.close();
+
+        return returnList;
+    }
+
+    public Account get_one_account(String AC_num){
+        Account ret_account;
+
+        SQLiteDatabase db=this.getReadableDatabase();
+        String AccountFetch_query = "SELECT * FROM "+Account_table+" where "+Account_number+"= \''" + AC_num;
+        Cursor cur = db.rawQuery(AccountFetch_query,null);
+
+        if(cur.moveToFirst()){
+            do {
+                String AccountNum = cur.getString(0);
+                String BankName = cur.getString(1);
+                String HolderName = cur.getString(2);
+                double Bal = cur.getDouble(3);
+
+                ret_account = new Account(AccountNum,BankName,HolderName,Bal);
+
+            }while(cur.moveToNext());
+        }else{
+            ret_account=null;
+        }
+
+        cur.close();
+        db.close();
+
+        return ret_account;
+    }
+
+    public void account_remove(String AC_num){
+        SQLiteDatabase db=this.getWritableDatabase();
+        String AC_Remove = "DELETE FROM "+Account_table+" WHERE "+Account_number+"= \''" + AC_num;
+        //Cursor cur = db.rawQuery(AC_Remove,null);
+
+        db.execSQL(AC_Remove);
+
+        db.close();
+    }
+
+    public void record_update(String accountNo, ExpenseType expenseType, double amount){
+        double RemBalance=0;
+
+        SQLiteDatabase db=this.getReadableDatabase();
+        String BalanceFetch_query = "SELECT "+ Balance + " FROM "+Account_table+" where "+Account_number+"= \''" + accountNo;
+        String UpdateBalance = "UPDATE "+Account_table+" SET "+Balance+" "+Double.toString(RemBalance)+" WHERE "+ Account_number+"= \''" + accountNo;
+        Cursor cur = db.rawQuery(BalanceFetch_query,null);
+
+        if(cur.moveToFirst()){
+            do{
+                RemBalance= cur.getDouble(0);
+            }while(cur.moveToNext());
+        }
+
+        if(expenseType.equals(ExpenseType.EXPENSE)){
+            RemBalance-=amount;
+
+        }else{
+            RemBalance+=amount;
+        }
+
+        db.execSQL(UpdateBalance);
+
+        cur.close();
+        db.close();
+    }
+
+    public boolean Add_Log_Transaction(Date date, String accountNo, ExpenseType expenseType, double amount){
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues Con_vals = new ContentValues();
+
+        DateFormat dateFormat = new SimpleDateFormat("dd-mm-yyyy");
+        String strDate = dateFormat.format(date);
+
+        String ExpType;
+        if(expenseType.equals(ExpenseType.EXPENSE)){
+            ExpType="Expense";
+        }else{
+            ExpType="Income";
+        }
+
+        Con_vals.put(Date,strDate);
+        Con_vals.put(TAccount_num,accountNo);
+        Con_vals.put(Expense_type, ExpType);
+        Con_vals.put(Amount,amount);
+
+        long insert = db.insert(Transaction_table, null, Con_vals);
+
+
+        if(insert==-1){
+            return false;
+        }else{
+            return true;
+        }
+    }
+
+    public List<Transaction> getALLTransactions() throws ParseException {
+
+        ArrayList<Transaction> returnList= new ArrayList<>();
+        SQLiteDatabase db=this.getReadableDatabase();
+        ExpenseType temp;
+
+        String Transactions_query = "SELECT * FROM "+Transaction_table;
+        Cursor cur = db.rawQuery(Transactions_query,null);
+
+        if(cur.moveToFirst()){
+            do {
+
+                Date date1= new SimpleDateFormat("dd/MM/yyyy").parse(cur.getString(0));
+                String AccountNum= cur.getString(1);
+                String strExpenseType=cur.getString(2);
+                Double Amnt = cur.getDouble(3);
+
+                if(strExpenseType.equals("Expense")){
+                    temp= ExpenseType.EXPENSE;
+                }else{
+                    temp=ExpenseType.INCOME;
+                }
+
+                Transaction tr = new Transaction(date1,AccountNum,temp,Amnt);
+                returnList.add(tr);
+            }while(cur.moveToNext());
+        }
+
+        cur.close();
+        db.close();
+
+        return  returnList;
+    }
+
+    public List<Transaction> getlimitedTransaction(int limit) throws ParseException {
+        ArrayList<Transaction> returnList= new ArrayList<>();
+        SQLiteDatabase db=this.getReadableDatabase();
+        ExpenseType temp;
+        int count=1;
+
+        String Transactions_query = "SELECT * FROM "+Transaction_table;
+        Cursor cur = db.rawQuery(Transactions_query,null);
+
+        if(cur.moveToFirst()){
+            do {
+                count+=1;
+                Date date1= new SimpleDateFormat("dd/MM/yyyy").parse(cur.getString(0));
+                String AccountNum= cur.getString(1);
+                String strExpenseType=cur.getString(2);
+                Double Amnt = cur.getDouble(3);
+
+                if(strExpenseType.equals("Expense")){
+                    temp= ExpenseType.EXPENSE;
+                }else{
+                    temp=ExpenseType.INCOME;
+                }
+
+                Transaction tr = new Transaction(date1,AccountNum,temp,Amnt);
+                returnList.add(tr);
+            }while(cur.moveToNext() && count<=limit);
+        }
+
+        cur.close();
+        db.close();
+
+        return  returnList;
+    }
+}

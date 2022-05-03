@@ -1,0 +1,37 @@
+package lk.ac.mrt.cse.dbs.simpleexpensemanager.data.impl;
+
+import java.text.ParseException;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+
+import lk.ac.mrt.cse.dbs.simpleexpensemanager.data.TransactionDAO;
+import lk.ac.mrt.cse.dbs.simpleexpensemanager.data.model.ExpenseType;
+import lk.ac.mrt.cse.dbs.simpleexpensemanager.data.model.Transaction;
+import lk.ac.mrt.cse.dbs.simpleexpensemanager.ui.DatabaseIni;
+
+public class PersistantTransactionDAO implements TransactionDAO {
+
+    private DatabaseIni database;
+    public PersistantTransactionDAO(DatabaseIni db) {
+
+        this.database=db;
+    }
+
+    @Override
+    public void logTransaction(Date date, String accountNo, ExpenseType expenseType, double amount) {
+        boolean result=database.Add_Log_Transaction(date,accountNo,expenseType,amount);
+    }
+
+    @Override
+    public List<Transaction> getAllTransactionLogs() throws ParseException {
+
+        return database.getALLTransactions();
+    }
+
+    @Override
+    public List<Transaction> getPaginatedTransactionLogs(int limit) throws ParseException {
+
+        return database.getlimitedTransaction(limit);
+    }
+}
